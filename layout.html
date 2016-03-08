@@ -2,7 +2,10 @@
   <title>meteorproject</title>
 </head>
 
+
+
 <body>
+  
   
   <div class="container">
     <header>
@@ -13,7 +16,7 @@
         Hide finished resolutions
       </label>
      
-     {{#if currentUser}}
+     {{#if currentUser}} <!-- if the current user is logged in. currentUser is defined by meteor accounts -->
     <form class="new-resolution">
       <input type= "text" name="title" placeholder="A new resolution">
       <input type="submit" value="Submit">
@@ -31,18 +34,13 @@
     {{> loginButtons}}
 
   </div>
+  
+  
 </body>
 
 
 
 
 
-<template name="kewlTemplate">
-  <li class= "{{#if checked}}checked{{/if}}"> <!-- if the database marks this object as checked, update the class to checked -->
-    <input type="checkbox" checked="{{checked}}" class="toggle-checked">
-    <span class="text">{{title}}</span> 
-    <button class="delete">Remove</button>
-  </li>
 
-</template>
 

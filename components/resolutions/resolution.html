@@ -1,0 +1,22 @@
+<template name="kewlTemplate">
+  
+  
+  <li class= "{{#if checked}}checked{{/if}}"> <!-- if the database marks this object as checked, update the class to checked -->
+     {{#if isOwner}}
+    <input type="checkbox" checked="{{checked}}" class="toggle-checked">
+
+      <button class="toggle-private">
+        {{#if private}}
+          Private
+        {{else}}
+          Public
+          {{/if}}
+      </button>
+      {{/if}}
+    <span class="text">{{title}}</span> 
+    {{#if isOwner}}
+    <button class="delete">Remove</button>
+    {{/if}}
+  </li>
+
+</template>

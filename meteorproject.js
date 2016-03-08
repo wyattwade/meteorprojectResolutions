@@ -9,10 +9,12 @@ var Resolutions = new Mongo.Collection('resolutions');
 
 
 if (Meteor.isClient) {
+    Meteor.subscribe("resolutions");   // show the resolutions database results to the client
+    
+   
     Template.body.helpers({
-        resolutions: function () {
-     //     return Kewl.find();       // the #each function in the html page is calling each item in the resolutions. It figures out that the Kewl collection is multiple items. 
         
+        resolutions: function () {
             if (Session.get('hideFinished')){
                 return Resolutions.find({checked: {$ne: true}})
             }
@@ -26,44 +28,36 @@ if (Meteor.isClient) {
       
       
       
-      // below intererets the text that is in the html name input field and inserts it onto the data base. Notice this is an event rather than a helper. 
     Template.body.events({
-      
-      'submit .new-resolution': function(event) {
-       var title = event.target.title.value
-       
-       // the data is inserted into the Resolutions collection
-       Resolutions.insert({
-        title: title,   
-        createdAt: new Date()
-         
-       });
-       
+        
+      'submit .new-resolution': function(event) {      //when the submit input type is clicked in the new-resolution class - do the following function. 
+    
+       var title = event.target.title.value            // event.target.title.value gives us the value of the input. 
+    
+        Meteor.call("addResolution", title);           // calls addResolution function with title param. 
+   
        event.target.title.value = ""; // on submit, the input is cleared. 
-       
+    
        return false; // the previous function is ended. There is no page reload or something. 
       },
-      'change .hide-finished': function(event){
-          Session.set('hideFinished', event.target.checked);
+      
+      
+      
+      'change .hide-finished': function(event){                 //when hidefinished is clicked (don't know what change is referring to) 
+          Session.set('hideFinished', event.target.checked);    // session means there are no database changes. 
       }
+      
+      
     });
     
     
-    Template.kewlTemplate.events({
-       
-       'click .toggle-checked': function(){
-           Resolutions.update(this._id, {$set:{checked: !this.checked}});
-       },
-       
-       
-       //delete
-       'click .delete': function(){
-           Resolutions.remove(this._id);
-       } 
+    
+
+    Accounts.ui.config({                            // command from the accounts library. User uses username rather than email(default) to sign up. 
+     
+       passwordSignupFields: "USERNAME_ONLY"    
+    
         
-    });
-    Accounts.ui.config({
-       passwordSignupFields: "USERNAME_ONLY" 
     });
 
 }
@@ -72,6 +66,45 @@ if (Meteor.isClient) {
 
 
 
+
+
+Meteor.methods({                           
+    addResolution: function(title) {     // defines title, createdAt, and owner schema, and gives values to a new input entry. 
+        Resolutions.insert({
+            title: title,
+            createdAt: new Date(),
+            owner: Meteor.userId()
+        });
+        
+        
+    },
+    updateResolution: function(id, checked){                    //this, and the following meteor methods are called in resolution.js from click events. 
+        var res = Resolutions.findOne(id);
+        
+        if(res.owner !== Meteor.userId()){
+            throw new Meteor.Error('not-authorized')
+        }
+        Resolutions.update(id, {$set: {checked: checked}});
+    },
+    deleteResolution: function(id){
+        var res = Resolutions.findOne(id);
+        
+        if(res.owner !== Meteor.userId()){
+            throw new Meteor.Error('not-authorized')
+        }
+        Resolutions.remove(id)
+    },
+    setPrivate: function(id, private){
+        var res = Resolutions.findOne(id);
+        
+        if(res.owner !== Meteor.userId()) {
+            throw new Meteor.Error('not-authorized');
+        }
+        Resolutions.update(id, {$set: {private: private}});
+  
+        
+    }
+});
 
 
 
@@ -99,5 +132,13 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
   Meteor.startup(function () {
     // code to run on server at startup
+  });
+  Meteor.publish("resolutions", function() {        // serve data in the resolution collection to the client
+      return Resolutions.find({
+          $or: [
+              { private: {$ne: true}},              // if the resolution is not set to private
+              { owner: this.userId}                 // or if the owner is equel to the userid. 
+               ]
+      });
   });
 }
